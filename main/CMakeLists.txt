@@ -1,8 +1,7 @@
 set(srcs
 "app_main.cpp"
 
-"example/hello.cpp"
-# TODO: add new source (.c/.cc/.cpp) files here (best if kept in lexical order)
+"io/sd_card_daemon.cpp"
 )
 
 idf_component_register(
