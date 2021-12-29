@@ -5,6 +5,8 @@
 #include <optional>
 #include <variant>
 
+#include "common/macros.hpp"
+
 template <typename TInner>
 class RustIter {
  public:
@@ -12,11 +14,6 @@ class RustIter {
 
   template <typename... T>
   explicit RustIter(T&&... arg) : inner_{std::forward<T>(arg)...}, curr_(inner_.Next()) {}
-
-  RustIter(const RustIter<TInner>& rhs) = delete;
-  RustIter(RustIter<TInner>&& rhs) noexcept = delete;
-  RustIter<TInner>& operator=(const RustIter<TInner>& rhs) = delete;
-  RustIter<TInner>& operator=(RustIter<TInner>&& rhs) noexcept = delete;
 
   ~RustIter() = default;
 
@@ -48,10 +45,11 @@ class RustIter {
     friend class RustIter<TInner>;
   };
 
-  Proxy begin() { return {this}; }
-  std::monostate end() { return {}; }
-
+  Proxy begin() noexcept { return {this}; }
+  std::monostate end() const noexcept { return {}; }
   friend bool operator!=(const Proxy& lhs, const std::monostate& rhs) { return lhs; }
+
+  NOT_COPYABLE_NOR_MOVABLE(RustIter<TInner>)
 
  private:
   TInner inner_;
