@@ -24,7 +24,7 @@ idf_component_register(
 )
 
 # compiler flags for the `main` component can be specified here
-target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++2a)
+target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++2a -DCONFIG_MOUNT_ROOT="/s")
 
 # compiler flags to be applied to all components can be specified here
 # target_compile_options(${COMPONENT_LIB} PUBLIC)
