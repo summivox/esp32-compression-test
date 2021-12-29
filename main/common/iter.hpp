@@ -3,6 +3,7 @@
 #pragma once
 
 #include <optional>
+#include <variant>
 
 template <typename TInner>
 class RustIter {
@@ -12,10 +13,11 @@ class RustIter {
   template <typename... T>
   explicit RustIter(T&&... arg) : inner_{std::forward<T>(arg)...}, curr_(inner_.Next()) {}
 
-  RustIter(const RustIter<TInner>& rhs) = default;
-  RustIter(RustIter<TInner>&& rhs) noexcept = default;
-  RustIter<TInner>& operator=(const RustIter<TInner>& rhs) = default;
-  RustIter<TInner>& operator=(RustIter<TInner>&& rhs) noexcept = default;
+  RustIter(const RustIter<TInner>& rhs) = delete;
+  RustIter(RustIter<TInner>&& rhs) noexcept = delete;
+  RustIter<TInner>& operator=(const RustIter<TInner>& rhs) = delete;
+  RustIter<TInner>& operator=(RustIter<TInner>&& rhs) noexcept = delete;
+
   ~RustIter() = default;
 
   operator bool() const { return !!curr_; }
@@ -27,15 +29,31 @@ class RustIter {
     return *this;
   }
 
-  friend RustIter<TInner> begin(RustIter<TInner> iter) noexcept { return iter; }
-  friend RustIter<TInner> end(const RustIter<TInner>& iter) noexcept {
-    return RustIter<TInner>{(typename RustIter<TInner>::Marker){}};
-  }
+  // ranged-for proxying
+
+  class Proxy {
+   public:
+    operator bool() const { return !!*iter_; }
+    const Item& operator*() const { return **iter_; }
+    const Item* operator->() const { return &**iter_; }
+    Proxy& operator++() {
+      ++(*iter_);
+      return *this;
+    }
+
+   private:
+    RustIter<TInner>* iter_;
+    Proxy(RustIter* iter) : iter_(iter) {}
+
+    friend class RustIter<TInner>;
+  };
+
+  Proxy begin() { return {this}; }
+  std::monostate end() { return {}; }
+
+  friend bool operator!=(const Proxy& lhs, const std::monostate& rhs) { return lhs; }
 
  private:
-  struct Marker {};
-  RustIter(Marker) : curr_{} {}
-
   TInner inner_;
   std::optional<Item> curr_;
 };
