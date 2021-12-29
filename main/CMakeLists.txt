@@ -1,12 +1,26 @@
 set(srcs
 "app_main.cpp"
 
+"io/fs_utils.cpp"
 "io/sd_card_daemon.cpp"
+)
+
+set(requires
+# System
+fatfs
+nvs_flash
+sdmmc
+vfs
+
+# Project
+fmtlib
+scope_guard
 )
 
 idf_component_register(
     SRCS ${srcs}
     INCLUDE_DIRS "."
+    REQUIRES ${requires}
 )
 
 # compiler flags for the `main` component can be specified here
