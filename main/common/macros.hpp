@@ -1,3 +1,6 @@
+// Copyright 2021 summivox. All rights reserved.
+// Authors: summivox@gmail.com
+
 #pragma once
 
 #include "esp_err.h"
@@ -65,3 +68,26 @@
   T(T const&) = delete;                \
   void operator=(T const& t) = delete; \
   T(T&&) = delete;
+
+/// Implement factory pattern with parameterized ctor and `esp_err_t Setup()`
+#define DEFINE_CREATE(CLASS)                                         \
+  template <typename... T>                                           \
+  static std::unique_ptr<CLASS> Create(T&&... arg) {                 \
+    std::unique_ptr<CLASS> self{new CLASS(std::forward<T>(arg)...)}; \
+    if (self->Setup() != ESP_OK) {                                   \
+      self.reset();                                                  \
+    }                                                                \
+    return self;                                                     \
+  }
+
+#define CHECKED_UNREACHABLE        \
+  do {                             \
+    CHECK(false && "unreachable"); \
+    __builtin_unreachable();       \
+  } while (0)
+
+#define NOT_COPYABLE_NOR_MOVABLE(T) \
+  T(const T&) = delete;             \
+  T(T&&) = delete;                  \
+  T& operator=(const T&) = delete;  \
+  T&& operator=(T&&) = delete;

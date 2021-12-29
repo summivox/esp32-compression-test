@@ -1,11 +1,14 @@
+// Copyright 2021 summivox. All rights reserved.
 // Authors: summivox@gmail.com
 
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
+#include <variant>
 
 constexpr char HexDigitLower(uint8_t i) { return "0123456789abcdef"[i & uint8_t{0xf}]; }
 constexpr char HexDigitUpper(uint8_t i) { return "0123456789ABCDEF"[i & uint8_t{0xf}]; }
@@ -26,7 +29,7 @@ template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
 // usually not zero-sized, but good enough
-struct Unit {};
+using Unit = std::monostate;
 
 constexpr uint16_t Uint16LeAt(const uint8_t* bytes) {
   return static_cast<uint16_t>(
@@ -144,3 +147,8 @@ template <typename P, typename M>
 constexpr P* ContainerOf(M* ptr, const M P::*member) {
   return (P*)((char*)ptr - OffsetOf(member));
 }
+
+// polyfill char8_t
+#ifndef __cpp_char8_t
+using char8_t = char;
+#endif  // __cpp_char8_t
