@@ -6,19 +6,11 @@
 #include "driver/gpio.h"
 #include "esp_console.h"
 #include "esp_err.h"
-#include "fmt/chrono.h"
-#include "fmt/core.h"
 #include "scope_guard/scope_guard.hpp"
 
 #include "common/macros.hpp"
 #include "io/fs_utils.hpp"
 #include "io/sd_card_daemon.hpp"
-
-using fmt::format;
-using fmt::format_to;
-using fmt::print;
-
-using FmtBuffer = fmt::basic_memory_buffer<char, 256>;
 
 namespace {
 constexpr char TAG[] = "main";
@@ -59,18 +51,28 @@ int ListCommand(int argc, char** argv) {
     return 0;
   }
   CHECK(FLAGS_list.path->count == 1);
+
   std::string dir = "/s";
   dir += FLAGS_list.path->sval[0];
+
   for (dirent* p : io::DirIter(dir.c_str())) {
-    print("name=\'{}\' type={} ({})", p->d_name, p->d_type, kDirentTypeName.at(p->d_type));
+    printf("name='%s' type=%d (%s)", p->d_name, p->d_type, kDirentTypeName.at(p->d_type).c_str());
     if (p->d_type == DT_REG) {
       struct stat s {};
-      stat(format("{}/{}", dir, p->d_name).c_str(), &s);
+      stat((dir + "/" + p->d_name).c_str(), &s);
       TimeParts mt = ToParts(s.st_mtim);
       // st_ctim is not populated, and we don't have st_birthtim / st_birthtimespec
-      print(" size={} mtim={:%F_%T}", s.st_size, mt);
+      printf(
+          " size=%d mtim=%04d-%02d-%02d_%02d:%02d:%02d",
+          (int)s.st_size,
+          mt.tm_year + 1900,
+          mt.tm_mon + 1,
+          mt.tm_mday,
+          mt.tm_hour,
+          mt.tm_min,
+          mt.tm_sec);
     }
-    print("\n");
+    printf("\n");
   }
 
   return 0;
@@ -96,7 +98,7 @@ extern "C" void app_main(void) {
   register_system_common();
   RegisterListCommand();
 
-  print(
+  printf(
       "\n\n\n\n"
       "FS playground\n\n\n\n"
       "Awaiting SD card mount...\n");
@@ -106,7 +108,7 @@ extern "C" void app_main(void) {
   while (!g_sd_card->CheckIsCardWorking()) {
     vTaskDelay(pdMS_TO_TICKS(1));
   }
-  print("done.\n");
+  printf("done.\n");
 
   CHECK_OK(esp_console_start_repl(repl));
 

@@ -8,8 +8,6 @@
 #include <ctime>
 #include <type_traits>
 
-#include "fmt/chrono.h"
-
 #include "common/utils.hpp"
 
 // Time point conventions in this project:
@@ -77,9 +75,9 @@ inline TimeUnixWithUs ToUnix(const TimeUnixWithNs& t) {
   };
 }
 
-inline TimeParts ToParts(TimeUnix t_unix) { return fmt::gmtime(t_unix); }
-inline TimeParts ToParts(TimeUnixWithUs t_unix) { return fmt::gmtime(t_unix.tv_sec); }
-inline TimeParts ToParts(TimeUnixWithNs t_unix) { return fmt::gmtime(t_unix.tv_sec); }
+inline TimeParts ToParts(TimeUnix t_unix) { return *std::gmtime(&t_unix); }
+inline TimeParts ToParts(TimeUnixWithUs t_unix) { return *std::gmtime(&t_unix.tv_sec); }
+inline TimeParts ToParts(TimeUnixWithNs t_unix) { return *std::gmtime(&t_unix.tv_sec); }
 
 constexpr int64_t ToMicroseconds(const TimeUnixWithUs& t_unix) {
   return int64_t{t_unix.tv_sec} * int64_t{1'000'000} + int64_t{t_unix.tv_usec};

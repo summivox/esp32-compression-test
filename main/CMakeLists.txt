@@ -15,7 +15,6 @@ vfs
 
 # Project
 cmd_system
-fmtlib
 scope_guard
 )
 
