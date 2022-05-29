@@ -1,6 +1,7 @@
 set(srcs
 "app_main.cpp"
 
+"common/command_registry.cpp"
 "io/fs_utils.cpp"
 "io/sd_card_daemon.cpp"
 )
