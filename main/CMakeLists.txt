@@ -7,12 +7,14 @@ set(srcs
 
 set(requires
 # System
+console
 fatfs
 nvs_flash
 sdmmc
 vfs
 
 # Project
+cmd_system
 fmtlib
 scope_guard
 )

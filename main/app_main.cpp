@@ -1,7 +1,10 @@
 #include <map>
 #include <memory>
 
+#include "argtable3/argtable3.h"
+#include "cmd_system.h"
 #include "driver/gpio.h"
+#include "esp_console.h"
 #include "esp_err.h"
 #include "fmt/chrono.h"
 #include "fmt/core.h"
@@ -45,9 +48,19 @@ const std::map<uint8_t, std::string> kDirentTypeName{
     {DT_UNKNOWN, "DT_UNKNOWN"},
 };
 
-void Test() {
-  std::string dir = "/s/BD2AA7C0/355/0";
-  // std::string dir = "/s/maps";
+struct ListCommandArgs {
+  arg_str* path = arg_str1(nullptr, nullptr, "<path>", "path to list");
+  struct arg_end* end = arg_end(1);
+} FLAGS_list;
+int ListCommand(int argc, char** argv) {
+  const int num_errors = arg_parse(argc, argv, (void**)&FLAGS_list);
+  if (num_errors > 0) {
+    arg_print_errors(stderr, FLAGS_list.end, argv[0]);
+    return 0;
+  }
+  CHECK(FLAGS_list.path->count == 1);
+  std::string dir = "/s";
+  dir += FLAGS_list.path->sval[0];
   for (dirent* p : io::DirIter(dir.c_str())) {
     print("name=\'{}\' type={} ({})", p->d_name, p->d_type, kDirentTypeName.at(p->d_type));
     if (p->d_type == DT_REG) {
@@ -59,21 +72,44 @@ void Test() {
     }
     print("\n");
   }
+
+  return 0;
+}
+void RegisterListCommand() {
+  constexpr esp_console_cmd_t cmd = {
+      .command = "ls",
+      .help = "list everything under given path",
+      .hint = nullptr,
+      .func = ListCommand,
+      .argtable = &FLAGS_list,
+  };
+  CHECK_OK(esp_console_cmd_register(&cmd));
 }
 
 extern "C" void app_main(void) {
+  esp_console_repl_t* repl = nullptr;
+  esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
+  repl_config.prompt = "rice>";
+  esp_console_dev_uart_config_t repl_uart_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
+  repl_uart_config.baud_rate = CONFIG_ESP_CONSOLE_UART_BAUDRATE;
+  CHECK_OK(esp_console_new_repl_uart(&repl_uart_config, &repl_config, &repl));
+  register_system_common();
+  RegisterListCommand();
+
   print(
       "\n\n\n\n"
-      "FS playground\n\n\n\n");
+      "FS playground\n\n\n\n"
+      "Awaiting SD card mount...\n");
 
   CHECK_OK(SetupSdCard());
   CHECK_OK(g_sd_card->Start(nullptr));
   while (!g_sd_card->CheckIsCardWorking()) {
     vTaskDelay(pdMS_TO_TICKS(1));
   }
-  ESP_LOGI(TAG, "SD card mounted; starting test");
-  Test();
-  ESP_LOGI(TAG, "done");
+  print("done.\n");
+
+  CHECK_OK(esp_console_start_repl(repl));
+
   while (1) {
     vTaskDelay(pdMS_TO_TICKS(1));
   }
