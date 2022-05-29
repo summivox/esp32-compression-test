@@ -5,11 +5,12 @@
 
 #include "argtable3/argtable3.h"
 
-#include "common/command_registry.hpp"
+#include "common/console_command_registry.hpp"
 
-#define DEFINE_COMMAND(name, help_str, hint_str, argtable_struct_body, num_end)                 \
+#define DEFINE_CONSOLE_COMMAND(name, help_str, hint_str, argtable_struct_body, num_end)         \
   struct Argtable_##name argtable_struct_body;                                                  \
-  struct CommandWrapper_##name : public Argtable_##name {                                       \
+  struct ConsoleCommand_##name : public Argtable_##name {                                       \
+    static constexpr char TAG[] = #name;                                                        \
     struct arg_end* end = arg_end(num_end);                                                     \
     int Run(int argc, char** argv) {                                                            \
       if (const int num_errors = arg_parse(argc, argv, reinterpret_cast<void**>(this));         \
@@ -20,10 +21,10 @@
       return RunInternal(argc, argv);                                                           \
     }                                                                                           \
     int RunInternal(int argc, char** argv);                                                     \
-  } g_command_wrapper_##name;                                                                   \
+  } g_console_command_##name;                                                                   \
                                                                                                 \
-  static bool CommandRegisterer_##name() {                                                      \
-    CommandRegistry* registry = CommandRegistry::GetInstance();                                 \
+  static bool ConsoleCommandRegisterer_##name() {                                               \
+    ConsoleCommandRegistry* registry = ConsoleCommandRegistry::GetInstance();                   \
     if (!registry) {                                                                            \
       return false;                                                                             \
     }                                                                                           \
@@ -31,11 +32,11 @@
         .command = #name,                                                                       \
         .help = help_str,                                                                       \
         .hint = hint_str,                                                                       \
-        .func = [](int argc, char** argv) { return g_command_wrapper_##name.Run(argc, argv); }, \
-        .argtable = reinterpret_cast<void**>(&g_command_wrapper_##name),                        \
+        .func = [](int argc, char** argv) { return g_console_command_##name.Run(argc, argv); }, \
+        .argtable = reinterpret_cast<void**>(&g_console_command_##name),                        \
     });                                                                                         \
     return true;                                                                                \
   }                                                                                             \
-  static bool g_command_registerer_result_##name = CommandRegisterer_##name();                  \
+  static bool g_console_command_registerer_result_##name = ConsoleCommandRegisterer_##name();   \
                                                                                                 \
-  int CommandWrapper_##name::RunInternal(int argc, char** argv)
+  int ConsoleCommand_##name::RunInternal(int argc, char** argv)

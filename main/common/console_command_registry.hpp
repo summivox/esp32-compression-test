@@ -7,9 +7,9 @@
 
 #include "esp_console.h"
 
-class CommandRegistry {
+class ConsoleCommandRegistry {
  public:
-  static CommandRegistry* GetInstance();
+  static ConsoleCommandRegistry* GetInstance();
 
   void AddCommand(const esp_console_cmd_t& command);
   esp_err_t Register();
@@ -17,5 +17,5 @@ class CommandRegistry {
  private:
   std::vector<esp_console_cmd_t> commands_;
 
-  CommandRegistry();
+  ConsoleCommandRegistry();
 };

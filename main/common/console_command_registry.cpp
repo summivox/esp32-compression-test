@@ -1,7 +1,7 @@
 // Copyright 2022 summivox. All rights reserved.
 // Authors: summivox@gmail.com
 
-#include "common/command_registry.hpp"
+#include "common/console_command_registry.hpp"
 
 #include "esp_console.h"
 
@@ -11,16 +11,18 @@ namespace {
 constexpr char TAG[] = "cmd_reg";
 }  // namespace
 
-CommandRegistry::CommandRegistry() {}
+ConsoleCommandRegistry::ConsoleCommandRegistry() {}
 
-CommandRegistry* CommandRegistry::GetInstance() {
-  static CommandRegistry* instance = new CommandRegistry();
+ConsoleCommandRegistry* ConsoleCommandRegistry::GetInstance() {
+  static ConsoleCommandRegistry* instance = new ConsoleCommandRegistry();
   return instance;
 }
 
-void CommandRegistry::AddCommand(const esp_console_cmd_t& command) { commands_.push_back(command); }
+void ConsoleCommandRegistry::AddCommand(const esp_console_cmd_t& command) {
+  commands_.push_back(command);
+}
 
-esp_err_t CommandRegistry::Register() {
+esp_err_t ConsoleCommandRegistry::Register() {
   esp_err_t first_failure = ESP_OK;
   for (const esp_console_cmd_t& command : commands_) {
     ESP_LOGI(TAG, "registering command: %s", command.command);

@@ -8,8 +8,8 @@
 #include "esp_err.h"
 #include "scope_guard/scope_guard.hpp"
 
-#include "common/command.hpp"
-#include "common/command_registry.hpp"
+#include "common/console_command.hpp"
+#include "common/console_command_registry.hpp"
 #include "common/macros.hpp"
 #include "io/fs_utils.hpp"
 #include "io/sd_card_daemon.hpp"
@@ -42,7 +42,7 @@ const std::map<uint8_t, std::string> kDirentTypeName{
     {DT_UNKNOWN, "DT_UNKNOWN"},
 };
 
-DEFINE_COMMAND(
+DEFINE_CONSOLE_COMMAND(
     ls,
     "list all directories and files under given path",
     /*hint*/ nullptr,
@@ -52,6 +52,11 @@ DEFINE_COMMAND(
     },
     /*num_end*/ 1) {
   CHECK(path->count == 1);
+
+  if (!g_sd_card->CheckIsCardWorking()) {
+    ESP_LOGE(TAG, "SD card not ready");
+    return 2;
+  }
 
   std::string dir = "/s";
   dir += path->sval[0];
@@ -88,7 +93,7 @@ esp_console_repl_t* InitializeConsole() {
   esp_console_dev_uart_config_t repl_uart_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
   OK_OR_RETURN(esp_console_new_repl_uart(&repl_uart_config, &repl_config, &repl), nullptr);
   register_system_common();
-  OK_OR_RETURN(CommandRegistry::GetInstance()->Register(), nullptr);
+  OK_OR_RETURN(ConsoleCommandRegistry::GetInstance()->Register(), nullptr);
   return repl;
 }
 
