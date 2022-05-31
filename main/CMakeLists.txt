@@ -2,6 +2,7 @@ set(srcs
 "app_main.cpp"
 
 "common/console_command_registry.cpp"
+"io/file_line_reader.cpp"
 "io/fs_utils.cpp"
 "io/sd_card_daemon.cpp"
 )

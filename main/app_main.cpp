@@ -11,6 +11,7 @@
 #include "common/console_command.hpp"
 #include "common/console_command_registry.hpp"
 #include "common/macros.hpp"
+#include "io/file_line_reader.hpp"
 #include "io/fs_utils.hpp"
 #include "io/sd_card_daemon.hpp"
 
@@ -83,6 +84,25 @@ DEFINE_CONSOLE_COMMAND(
     printf("\n");
   }
 
+  return 0;
+}
+
+DEFINE_CONSOLE_COMMAND(
+    cat,
+    "print the file, line by line",
+    /*hint*/ nullptr,
+    { arg_file* path = arg_file1(nullptr, nullptr, "<file>", nullptr); },
+    1) {
+  if (!g_sd_card->CheckIsCardWorking()) {
+    ESP_LOGE(TAG, "SD card not ready");
+    return 2;
+  }
+  printf("\n------------------\n");
+  io::OwnedFile file = io::OpenFile(path->filename[0], "r");
+  for (const std::string_view line : io::FileLineReader(file.get(), 25)) {
+    fwrite(line.data(), 1, line.size(), stdout);
+  }
+  printf("====================\n\n");
   return 0;
 }
 
